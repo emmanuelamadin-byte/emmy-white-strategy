@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emmy White • Exclusive Wedding Consultant</title>
+    <script src="https://cdn.tailwindcss.com/3.4.14"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap');
+        .heading-font { font-family: 'Playfair Display', serif; }
+        .body-font { font-family: 'Inter', sans-serif; }
+        .luxury-card { background: white; border-radius: 30px; box-shadow: 0 20px 50px rgba(212, 175, 119, 0.1); border: 1px solid #f3e8d5; }
+        .btn-gold { background: linear-gradient(135deg, #d4af37, #b8860b); color: white; transition: 0.3s; cursor: pointer; border: none; }
+        .btn-gold:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(184, 134, 11, 0.3); }
+        .tab-link { cursor: pointer; padding: 12px 24px; border-bottom: 3px solid transparent; transition: 0.3s; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9b7b4b; }
+        .tab-link.active { border-color: #d4af37; color: #d4af37; background: rgba(212, 175, 119, 0.05); }
+        .hidden-section { display: none; }
+        .remove-btn { color: #f87171; cursor: pointer; font-weight: bold; font-size: 1.2rem; margin-right: 8px; }
+        select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em; }
+    </style>
+</head>
+<body class="bg-[#faf9f6] text-neutral-800 body-font overflow-x-hidden">
+
+    <header class="py-12 text-center" data-aos="fade-down">
+        <h1 class="heading-font text-6xl text-amber-900">Emmy White</h1>
+        <p class="uppercase tracking-[0.3em] text-[11px] font-bold text-amber-600 mt-2 italic">Professional Wedding Strategist</p>
+        <nav class="flex justify-center gap-2 mt-12 border-b border-amber-100 max-w-2xl mx-auto px-4">
+            <a onclick="switchView('planner')" id="nav-planner" class="tab-link active">Consultant Tool</a>
+            <a onclick="switchView('allocator')" id="nav-allocator" class="tab-link">Auto-Allocator</a>
+            <a onclick="switchView('guide')" id="nav-guide" class="tab-link">Market Guide 🔒</a>
+        </nav>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 pb-24">
+        <div class="luxury-card p-12 mb-12 text-center" data-aos="zoom-in">
+            <h2 class="heading-font text-3xl mb-4 text-amber-900 italic">Total Investment Budget</h2>
+            <div class="flex items-center justify-center">
+                <span class="text-6xl text-amber-400 font-light mr-4">₦</span>
+                <input id="active-budget" type="text" onkeyup="formatCurrency(this)" value="5,000,000" class="text-6xl font-light bg-transparent border-b-2 border-amber-100 outline-none w-full max-w-xl text-center focus:border-amber-400">
+            </div>
+        </div>
+
+        <div id="planner-view">
+            <div class="mb-10 flex justify-between items-center px-4" data-aos="fade-right">
+                <h3 class="heading-font text-3xl italic text-amber-900">1. Individual Quotes</h3>
+                <button onclick="addNewCategory()" class="bg-amber-50 text-amber-700 px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-amber-100 transition-all border border-amber-200">+ Add Custom Item</button>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="luxury-card p-10 space-y-6" id="input-container" data-aos="fade-right"></div>
+                <div class="luxury-card p-10 space-y-8" data-aos="fade-left">
+                    <div id="priority-container" class="space-y-8"></div>
+                    <button type="button" onclick="generateReport('manual')" class="w-full py-8 rounded-3xl btn-gold heading-font text-3xl mt-8">Analyze Strategy →</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="allocator-view" class="hidden-section">
+            <div class="max-w-3xl mx-auto luxury-card p-12 space-y-10 text-center" data-aos="fade-up">
+                <h3 class="heading-font text-4xl mb-4 italic text-amber-900">Professional Auto-Allocation</h3>
+                <div id="allocator-priority-container" class="space-y-8 text-left"></div>
+                <button type="button" onclick="generateReport('auto')" class="w-full py-8 rounded-3xl btn-gold heading-font text-3xl mt-8">Generate Perfect Split →</button>
+            </div>
+        </div>
+
+        <div id="report-section" class="hidden-section mt-24 pt-24 border-t-2 border-amber-100" data-aos="fade-up">
+            <div class="luxury-card p-12">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-16">
+                    <div class="text-center md:text-left">
+                        <span id="wedding-style" class="bg-amber-100 text-amber-800 text-[10px] px-4 py-2 rounded-full font-bold uppercase tracking-widest"></span>
+                        <h2 class="heading-font text-5xl mt-4 italic text-amber-900">Consultant Intelligence</h2>
+                    </div>
+                    <div class="text-center mt-8 md:mt-0">
+                        <div id="score-val" class="text-8xl font-light text-amber-600 heading-font">0</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Execution Score</div>
+                    </div>
+                </div>
+                <div class="grid lg:grid-cols-12 gap-16">
+                    <div class="lg:col-span-7 space-y-6">
+                        <div id="ai-advice" class="text-neutral-600 leading-relaxed"></div>
+                        <button onclick="downloadReportPDF()" class="px-8 py-3 border-2 border-amber-600 text-amber-700 rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-amber-600 hover:text-white transition-all">Download Strategy PDF ↓</button>
+                    </div>
+                    <div class="lg:col-span-5 bg-[#faf9f6] p-10 rounded-[40px] border border-amber-100">
+                        <h4 class="font-bold text-[11px] uppercase tracking-widest text-amber-700 mb-8 italic text-center">Breakdown</h4>
+                        <div id="breakdown-list" class="space-y-6 text-sm"></div>
+                        <div id="final-total" class="mt-12 pt-8 border-t-2 border-amber-200 text-4xl heading-font text-right text-amber-900"></div>
+                        <div id="over-under-label" class="text-right text-[11px] font-bold uppercase mt-2"></div>
+                    </div>
+                </div>
+                <div class="mt-20 p-16 bg-amber-950 text-white rounded-[50px] text-center shadow-2xl">
+                    <h3 class="heading-font text-4xl mb-6">Book Physical Consultation</h3>
+                    <form action="https://formspree.io/f/xrerpjqj" method="POST" class="flex flex-col md:flex-row gap-6 justify-center">
+                        <input type="text" name="name" placeholder="Full Name" required class="px-8 py-5 rounded-2xl text-neutral-800 w-full md:w-72 outline-none">
+                        <input type="email" name="email" placeholder="Email Address" required class="px-8 py-5 rounded-2xl text-neutral-800 w-full md:w-72 outline-none">
+                        <button type="submit" class="px-12 py-5 bg-amber-400 text-amber-950 rounded-2xl font-bold uppercase text-xs tracking-widest">Book Session</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="guide-view" class="hidden-section relative min-h-[500px]">
+            <div id="lock-screen" class="absolute inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-xl">
+                <div class="text-center p-12 luxury-card max-w-lg" data-aos="zoom-in">
+                    <h3 class="heading-font text-3xl mb-4 italic text-amber-900">Private Market Data</h3>
+                    <input type="password" id="passkey-input" placeholder="Enter Passkey" class="w-full px-8 py-5 rounded-2xl border border-amber-100 mb-6 text-center outline-none">
+                    <button onclick="unlockGuide()" class="w-full py-5 btn-gold rounded-2xl font-bold uppercase text-xs">Unlock</button>
+                    <p id="lock-error" class="text-red-500 text-xs mt-4 hidden">Invalid Passkey.</p>
+                </div>
+            </div>
+            <div id="guide-content" class="opacity-10 blur-2xl pointer-events-none transition-all duration-1000">
+                <div id="market-guide-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="ai-chat-wrapper" class="fixed bottom-6 right-6 z-[9999]">
+        <div id="chat-window" class="hidden w-80 h-96 bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-amber-100 mb-4 transition-all">
+            <div class="bg-amber-950 p-4 text-white flex justify-between items-center">
+                <span class="text-[10px] font-bold uppercase tracking-widest">Emmy AI Assistant</span>
+                <button onclick="toggleChat()" class="text-xl">×</button>
+            </div>
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs bg-[#faf9f6]">
+                <div class="bg-amber-50 p-3 rounded-2xl rounded-bl-none text-amber-900 italic">Welcome! How can I assist with your wedding strategy today?</div>
+            </div>
+            <div class="p-3 border-t flex gap-2">
+                <input type="text" id="chat-input" placeholder="Type here..." class="flex-1 text-xs p-3 bg-neutral-50 rounded-xl outline-none" onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button onclick="sendChatMessage()" class="bg-amber-600 text-white px-4 rounded-xl font-bold">↑</button>
+            </div>
+        </div>
+        <button onclick="toggleChat()" class="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center shadow-2xl border-4 border-white hover:scale-110 transition-all">
+            <span class="text-2xl text-white">✨</span>
+        </button>
+    </div>
+
+    <script>
+        // INITIALIZE ANIMATIONS
+        AOS.init({ duration: 1000, once: true });
+
+        const ACCESS_KEY = "EMMY2026";
+        let manualItems = [
+            { id: 'm1', name: 'Photography', prio: 5, price: 600000 },
+            { id: 'm2', name: 'Venue/Hall', prio: 4, price: 700000 },
+            { id: 'm3', name: 'Catering', prio: 4, price: 1500000 },
+            { id: 'm4', name: 'Decoration', prio: 3, price: 800000 },
+            { id: 'm5', name: 'Bridal Gown', prio: 3, price: 400000 }
+        ];
+        const rigidCore = [
+            { id: 'a1', name: 'Photography' }, { id: 'a2', name: 'Venue/Hall' },
+            { id: 'a3', name: 'Catering' }, { id: 'a4', name: 'Decoration' },
+            { id: 'a5', name: 'Clothing' }, { id: 'a6', name: 'Makeup/Glam' },
+            { id: 'a7', name: 'Entertainment' }, { id: 'a8', name: 'Logistics' },
+            { id: 'a9', name: 'Planning Fee' }, { id: 'a10', name: 'Misc' }
+        ];
+
+        window.onload = () => { renderPlanner(); renderAllocator(); renderGuide(); };
+
+        function toggleChat() { document.getElementById('chat-window').classList.toggle('hidden'); }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const msgCont = document.getElementById('chat-messages');
+            if(!input.value.trim()) return;
+
+            const userText = input.value;
+            msgCont.innerHTML += `<div class="bg-neutral-100 p-2 rounded-xl ml-8 text-right">${userText}</div>`;
+            input.value = '';
+
+            const loadingId = "loading-" + Date.now();
+            msgCont.innerHTML += `<div id="${loadingId}" class="bg-amber-50 p-2 rounded-xl mr-8 text-amber-800 italic animate-pulse">Emmy AI is thinking...</div>`;
+            msgCont.scrollTop = msgCont.scrollHeight;
+
+            try {
+                const response = await fetch('/api/analyze, {
+                    method: 'POST', body: JSON.stringify({ prompt: userText, type: 'chat' })
+                });
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+                msgCont.innerHTML += `<div class="bg-amber-50 p-2 rounded-xl mr-8">${data.candidates[0].content.parts[0].text}</div>`;
+            } catch (e) { 
+                document.getElementById(loadingId).remove();
+                msgCont.innerHTML += `<div class="bg-red-50 p-2 rounded-xl mr-8">Offline. Check Netlify.</div>`; 
+            }
+            msgCont.scrollTop = msgCont.scrollHeight;
+        }
+
+        async function generateReport(mode) {
+            const adviceDiv = document.getElementById('ai-advice');
+            const totalBudget = parseInt(document.getElementById('active-budget').value.replace(/[^0-9]/g, '')) || 1;
+            adviceDiv.innerHTML = `<div class="p-8 bg-amber-50 rounded-3xl animate-pulse italic text-center">Emmy's AI is analyzing your strategy...</div>`;
+            document.getElementById('report-section').classList.remove('hidden-section');
+            window.scrollTo({ top: document.getElementById('report-section').offsetTop - 50, behavior: 'smooth' });
+
+            let finalData = [];
+            let totalPrioPoints = 0;
+            if (mode === 'manual') { finalData = manualItems; } else {
+                rigidCore.forEach(c => {
+                    const p = parseInt(document.getElementById(`prio-auto-${c.id}`).value);
+                    totalPrioPoints += p;
+                    finalData.push({ ...c, prio: p });
+                });
+            }
+
+            let reportItems = [];
+            let totalPlanned = 0;
+            const listCont = document.getElementById('breakdown-list');
+            listCont.innerHTML = '';
+
+            finalData.forEach(item => {
+                let price = mode === 'manual' ? item.price : Math.round(totalBudget * (item.prio / totalPrioPoints));
+                totalPlanned += price;
+                reportItems.push(`${item.name}: ₦${price.toLocaleString()}`);
+                listCont.innerHTML += `<div class="flex justify-between border-b border-amber-50 pb-2"><span>${item.name}</span><span>₦${price.toLocaleString()}</span></div>`;
+            });
+
+            const diff = totalPlanned - totalBudget;
+            document.getElementById('score-val').innerText = Math.round(Math.max(10, 100 - (Math.abs(diff)/totalBudget * 50)));
+            document.getElementById('final-total').innerText = `₦${totalPlanned.toLocaleString()}`;
+            document.getElementById('over-under-label').innerText = diff > 0 ? `Deficit: ₦${diff.toLocaleString()}` : `Surplus: ₦${Math.abs(diff).toLocaleString()}`;
+            document.getElementById('wedding-style').innerText = totalBudget > 8000000 ? 'Imperial Luxury' : 'Standard Elite';
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST', body: JSON.stringify({ prompt: `Analyze budget: ₦${totalBudget}. Items: ${reportItems.join(', ')}`, type: 'report' })
+                });
+                const data = await response.json();
+                adviceDiv.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+            } catch (e) { adviceDiv.innerHTML = "Offline. Check Netlify variables."; }
+        }
+
+        function downloadReportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const advice = document.getElementById('ai-advice').innerText.replace(/<br>/g, '\n');
+            const total = document.getElementById('final-total').innerText;
+            const score = document.getElementById('score-val').innerText;
+            doc.setFontSize(22);
+            doc.text("Emmy White Strategy Report", 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Execution Score: ${score}/100`, 20, 35);
+            doc.text(`Estimated Total: ${total}`, 20, 45);
+            doc.text("Strategy Advice:", 20, 60);
+            const splitAdvice = doc.splitTextToSize(advice, 170);
+            doc.text(splitAdvice, 20, 70);
+            doc.save("Emmy-White-Strategy.pdf");
+        }
+
+        function renderPlanner() {
+            const inputCont = document.getElementById('input-container');
+            const prioCont = document.getElementById('priority-container');
+            inputCont.innerHTML = '<h4 class="text-[10px] font-bold uppercase text-amber-700 mb-8 italic text-center">Quotes</h4>';
+            prioCont.innerHTML = '';
+            manualItems.forEach(item => {
+                inputCont.innerHTML += `<div class="flex items-center gap-4"><span onclick="removeItem('${item.id}')" class="remove-btn">×</span><input type="text" value="${item.name}" onblur="updateName('${item.id}', this.value)" class="w-32 text-[11px] font-bold uppercase text-neutral-400 bg-transparent border-b border-amber-50 outline-none"><div class="flex-1 bg-neutral-50 rounded-2xl px-6 py-4 flex border border-amber-50"><span class="text-amber-500 font-bold mr-2">₦</span><input type="text" value="${item.price.toLocaleString()}" onkeyup="formatCurrency(this)" onblur="updatePrice('${item.id}', this.value)" class="bg-transparent w-full outline-none text-lg font-semibold text-neutral-700"></div></div>`;
+                prioCont.innerHTML += prioritySelector(`manual-${item.id}`, item.name, item.prio, `updatePrio('${item.id}', this.value)`);
+            });
+        }
+        function renderAllocator() { const cont = document.getElementById('allocator-priority-container'); cont.innerHTML = ''; rigidCore.forEach(cat => { cont.innerHTML += prioritySelector(`auto-${cat.id}`, cat.name, 3); }); }
+        function prioritySelector(id, label, currentPrio, onChange = '') { return `<div class="space-y-2"><label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">${label}</label><select id="prio-${id}" onchange="${onChange}" class="w-full bg-neutral-50 border border-amber-50 rounded-2xl px-6 py-4 text-sm font-semibold text-amber-900 outline-none focus:border-amber-400"><option value="5" ${currentPrio == 5 ? 'selected' : ''}>5 - Absolute Priority</option><option value="4" ${currentPrio == 4 ? 'selected' : ''}>4 - Very Important</option><option value="3" ${currentPrio == 3 ? 'selected' : ''}>3 - Standard</option><option value="2" ${currentPrio == 2 ? 'selected' : ''}>2 - Low Importance</option><option value="1" ${currentPrio == 1 ? 'selected' : ''}>1 - Just Basic</option></select></div>`; }
+        function addNewCategory() { if (manualItems.length < 11) { manualItems.push({ id: 'm' + Date.now(), name: 'New Item', prio: 3, price: 0 }); renderPlanner(); } }
+        function removeItem(id) { manualItems = manualItems.filter(i => i.id !== id); renderPlanner(); }
+        function updateName(id, val) { manualItems.find(i => i.id === id).name = val; renderPlanner(); }
+        function updatePrice(id, val) { manualItems.find(i => i.id === id).price = parseInt(val.replace(/[^0-9]/g, '')) || 0; }
+        function updatePrio(id, val) { manualItems.find(i => i.id === id).prio = parseInt(val); }
+        function formatCurrency(input) { let val = input.value.replace(/[^0-9]/g, ''); input.value = (parseInt(val) || 0).toLocaleString(); }
+        function unlockGuide() { if (document.getElementById('passkey-input').value === ACCESS_KEY) { document.getElementById('lock-screen').classList.add('hidden'); document.getElementById('guide-content').classList.remove('blur-2xl', 'opacity-10', 'pointer-events-none'); } else { document.getElementById('lock-error').classList.remove('hidden'); } }
+        function renderGuide() { const data = { 'Photography': [200,600,1500], 'Hall Rental': [150,700,4000], 'Catering': [600,1500,5000], 'Decor': [300,800,3000] }; const grid = document.getElementById('market-guide-grid'); Object.keys(data).forEach(k => { grid.innerHTML += `<div class="luxury-card p-8"><h4>${k}</h4><p class="text-xs mt-4 italic">Economy to Luxury tiers available.</p></div>`; }); }
+        function switchView(view) { document.getElementById('planner-view').classList.toggle('hidden-section', view !== 'planner'); document.getElementById('allocator-view').classList.toggle('hidden-section', view !== 'allocator'); document.getElementById('guide-view').classList.toggle('hidden-section', view !== 'guide'); document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active')); document.getElementById(`nav-${view}`).classList.add('active'); document.getElementById('report-section').classList.add('hidden-section'); AOS.refresh(); }
+    </script>
+</body>
+</html>
