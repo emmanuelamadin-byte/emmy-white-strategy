@@ -19,7 +19,8 @@ export default async function handler(request, response) {
         Constraint: Be sharp and authoritative. Total response must be under 160 words to ensure fast delivery.`;
     }
 
-    const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+    // FIXED: Changed model to 1.5-flash and ensured backticks are used for the URL
+    const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
