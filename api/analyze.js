@@ -1,63 +1,46 @@
-export default async function handler(request, response) {
+// netlify/functions/analyze.js
+export const handler = async (event) => {
+  // 1. Get the data sent from your website
+  const { prompt, type } = JSON.parse(event.body);
+  
+  // 2. This pulls your key from the Netlify "Secret Vault" (Environment Variables)
+  const API_KEY = process.env.GEMINI_API_KEY; 
+
+  // 3. Set the AI's Personality
+  let systemInstruction = "";
+  
+  if (type === 'chat') {
+      // Personality for the Chat Bot
+      systemInstruction = "You are the Emmy White AI Assistant, a premier Nigerian Wedding Strategist. You have expert knowledge of weddings in Lagos, Abuja, Port Harcourt, and a 'deep specialist' authority on Benin City. ONLY answer questions about wedding planning, traditional rites, budgets, and Nigerian vendors. If asked about non-wedding topics, politely steer the conversation back to weddings. Be elite, professional, and slightly witty.";
+  } else {
+      // Personality for the Strategy Report
+      systemInstruction = "You are Emmy White, the top Wedding Strategist in Nigeria. Analyze the provided budget and priorities. Be sharp, professional, and point out specific financial risks in the Nigerian market.";
+  }
+
   try {
-    const { prompt, type } = request.body;
-    const API_KEY = process.env.GEMINI_API_KEY; 
-
-    if (!API_KEY) return response.status(500).json({ error: 'System Error: Key Missing' });
-
-    let systemInstruction = "";
-    
-    if (type === 'chat') {
-        systemInstruction = `
-        Identity: You are Emmy White, a premier Luxury Wedding Strategist.
-        Voice: Sophisticated, helpful, and expert. You are a human consultant, not a bot.
-        STRICT RULES:
-        1. Never mention tourism, museums, or Benin City history.
-        2. If greeted, respond warmly and ask how you can help with their wedding vision.
-        3. Provide actual strategic value. If they ask about a budget, give a professional tip on scaling.
-        4. Keep it conversational but elite. Max 75 words.`;
-    } else {
-        systemInstruction = `
-        Identity: Emmy White, Principal Strategist.
-        Task: Conduct a professional Feasibility Audit on the user's wedding budget.
-        
-        Required Report Format:
-        1. [THE MARKET REALITY]: Honestly evaluate if this budget matches the user's "Execution Score" and market tier.
-        2. [LOGISTICAL RISKS]: Point out 2-3 specific risks based on the numbers provided (e.g., if catering is too low for the total, or photography is over-prioritized).
-        3. [THE INFLATION ADJUSTMENT]: Advise on how current Nigerian market costs (FX/Fuel) might change these numbers by the wedding date.
-        4. [STRATEGIC VERDICT]: A final, authoritative recommendation.
-        
-        Tone: Masterful, blunt yet supportive. Focus on the "Emmy White" standard of excellence. Under 200 words.`;
-    }
-
-    const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    // 4. Send the data to Google's Gemini Brain
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
       method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${API_KEY.trim()}`,
-        'Content-Type': 'application/json' 
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [
-            { role: "system", content: systemInstruction },
-            { role: "user", content: prompt }
-        ],
-        temperature: 0.5, // THE SWEET SPOT: Smart logic + Human warmth
-        max_tokens: 800
+        contents: [{ 
+            parts: [{ text: systemInstruction + "\n\nUser Request: " + prompt }] 
+        }]
       })
     });
 
-    const data = await apiResponse.json();
+    const data = await response.json();
     
-    if (data.error) return response.status(500).json({ error: data.error.message });
-
-    const aiMessage = data.choices[0].message.content;
-    
-    return response.status(200).json({ 
-        candidates: [{ content: { parts: [{ text: aiMessage }] } }] 
-    });
-
+    // 5. Send the AI's answer back to your website
+    return {
+      statusCode: 200,
+      body: JSON.stringify(data),
+    };
   } catch (error) {
-    return response.status(500).json({ error: 'Recalibrating strategy. Please refresh.' });
+    console.error(error);
+    return { 
+      statusCode: 500, 
+      body: JSON.stringify({ error: 'Failed to connect to Emmy AI' }) 
+    };
   }
-}
+};
