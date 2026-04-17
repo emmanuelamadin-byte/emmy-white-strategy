@@ -174,15 +174,16 @@
             msgCont.scrollTop = msgCont.scrollHeight;
 
             try {
-                const response = await fetch('/api/analyze, {
-                    method: 'POST', body: JSON.stringify({ prompt: userText, type: 'chat' })
+                const response = await fetch('/api/analyze', {
+                    method: 'POST', body: JSON.stringify({ prompt: userText, type: 'chat' }),
+                    headers: { 'Content-Type': 'application/json' }
                 });
                 const data = await response.json();
                 document.getElementById(loadingId).remove();
                 msgCont.innerHTML += `<div class="bg-amber-50 p-2 rounded-xl mr-8">${data.candidates[0].content.parts[0].text}</div>`;
             } catch (e) { 
                 document.getElementById(loadingId).remove();
-                msgCont.innerHTML += `<div class="bg-red-50 p-2 rounded-xl mr-8">Offline. Check Netlify.</div>`; 
+                msgCont.innerHTML += `<div class="bg-red-50 p-2 rounded-xl mr-8">System Error. Please refresh.</div>`; 
             }
             msgCont.scrollTop = msgCont.scrollHeight;
         }
@@ -224,11 +225,12 @@
 
             try {
                 const response = await fetch('/api/analyze', {
-                    method: 'POST', body: JSON.stringify({ prompt: `Analyze budget: ₦${totalBudget}. Items: ${reportItems.join(', ')}`, type: 'report' })
+                    method: 'POST', body: JSON.stringify({ prompt: `Analyze budget: ₦${totalBudget}. Items: ${reportItems.join(', ')}`, type: 'report' }),
+                    headers: { 'Content-Type': 'application/json' }
                 });
                 const data = await response.json();
                 adviceDiv.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
-            } catch (e) { adviceDiv.innerHTML = "Offline. Check Netlify variables."; }
+            } catch (e) { adviceDiv.innerHTML = "Analysis currently unavailable. Please check back later."; }
         }
 
         function downloadReportPDF() {
@@ -271,4 +273,4 @@
         function switchView(view) { document.getElementById('planner-view').classList.toggle('hidden-section', view !== 'planner'); document.getElementById('allocator-view').classList.toggle('hidden-section', view !== 'allocator'); document.getElementById('guide-view').classList.toggle('hidden-section', view !== 'guide'); document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active')); document.getElementById(`nav-${view}`).classList.add('active'); document.getElementById('report-section').classList.add('hidden-section'); AOS.refresh(); }
     </script>
 </body>
-</html> 
+</html>
