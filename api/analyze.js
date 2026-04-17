@@ -1,14 +1,28 @@
 export default async function handler(request, response) {
   try {
     const { prompt, type } = request.body;
-    // This will pull your Groq key from Vercel
     const API_KEY = process.env.GEMINI_API_KEY; 
 
-    const systemInstruction = type === 'chat' 
-        ? "You are Emmy White AI. Elite, witty, Benin City expert. 2 sentences + 1 tip. Max 70 words." 
-        : "You are Emmy White, Wedding Strategist. Analyze this budget for Nigeria. 1. Executive Summary (2 sentences). 2. Strategic Risks (3 bullets). Max 160 words.";
+    // THE STRATEGY UPGRADE
+    let systemInstruction = "";
+    
+    if (type === 'chat') {
+        systemInstruction = `You are the Emmy White Strategy Assistant. 
+        Context: You are an expert in luxury events, business scaling, and Nigerian market dynamics.
+        Personality: Professional, visionary, and sharp. 
+        Task: Provide a sophisticated 3-sentence insight followed by a high-level strategic recommendation. 
+        Constraint: Avoid regional cliches. Focus on global standards applied to the Nigerian context.`;
+    } else {
+        systemInstruction = `You are Emmy White, Nigeria's premier Wedding Strategist. 
+        Task: Conduct a rigorous feasibility analysis on the provided budget. 
+        Required Sections:
+        1. 'Market Positioning': Analyze if this budget fits Luxury, Mid-Range, or Economy tiers in today's economy.
+        2. 'Inflationary Impact': Detail how current FX rates and Nigerian fuel/logistics costs affect this specific plan.
+        3. 'Strategic Risks': Identify 3 deep-level risks (e.g., vendor reliability, power redundancy, venue hidden costs).
+        4. 'The Emmy White Verdict': A final authoritative statement on whether to proceed or pivot.
+        Tone: Analytical, blunt, and elite. Under 250 words.`;
+    }
 
-    // We are now calling Groq's super-fast Llama 3 model
     const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: 'POST',
       headers: { 
@@ -21,25 +35,18 @@ export default async function handler(request, response) {
             { role: "system", content: systemInstruction },
             { role: "user", content: prompt }
         ],
-        temperature: 0.7
+        temperature: 0.6 // Lower temperature makes it more "serious" and less "random"
       })
     });
 
     const data = await apiResponse.json();
-
-    if (data.error) {
-        return response.status(500).json({ error: "Groq Error: " + data.error.message });
-    }
-
-    // TRANSLATION LAYER: We turn Groq's answer into the format your website expects
     const aiMessage = data.choices[0].message.content;
-    const formattedResponse = { 
+    
+    return response.status(200).json({ 
         candidates: [{ content: { parts: [{ text: aiMessage }] } }] 
-    };
-
-    return response.status(200).json(formattedResponse);
+    });
 
   } catch (error) {
-    return response.status(500).json({ error: 'Emmy AI is optimizing. Error: ' + error.message });
+    return response.status(500).json({ error: 'Emmy AI is optimizing strategy. Please try again.' });
   }
 }
