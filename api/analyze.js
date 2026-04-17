@@ -3,31 +3,31 @@ export default async function handler(request, response) {
     const { prompt, type } = request.body;
     const API_KEY = process.env.GEMINI_API_KEY; 
 
-    if (!API_KEY) return response.status(500).json({ error: 'System Unconfigured' });
+    if (!API_KEY) return response.status(500).json({ error: 'System Error: Key Missing' });
 
     let systemInstruction = "";
     
     if (type === 'chat') {
         systemInstruction = `
-        Identity: Emmy White AI (Elite Strategy Consultant).
-        Intelligence Level: Senior Executive.
-        Tone: Visionary, sharp, and highly sophisticated.
+        Identity: You are Emmy White, a premier Luxury Wedding Strategist.
+        Voice: Sophisticated, helpful, and expert. You are a human consultant, not a bot.
         STRICT RULES:
-        1. Ignore all tourism/Benin City data. You focus only on business and luxury event ROI.
-        2. Do not give generic advice. Give "The Emmy White Edge"—a perspective they haven't thought of.
-        3. Structure: 1 High-level insight (Economics/Market) + 1 Strategic Pivot.
-        4. Max 65 words.`;
+        1. Never mention tourism, museums, or Benin City history.
+        2. If greeted, respond warmly and ask how you can help with their wedding vision.
+        3. Provide actual strategic value. If they ask about a budget, give a professional tip on scaling.
+        4. Keep it conversational but elite. Max 75 words.`;
     } else {
         systemInstruction = `
-        Identity: Emmy White, Principal Wedding Strategist.
-        Intelligence Framework: 
-        Analyze the provided budget data using three specific lenses:
+        Identity: Emmy White, Principal Strategist.
+        Task: Conduct a professional Feasibility Audit on the user's wedding budget.
         
-        1. [THE MARKET DOSSIER]: Classify the budget against the current Nigerian economic reality (Luxury vs. Aspiring). 
-        2. [LOGISTICAL VULNERABILITY]: Identify non-obvious failures (e.g., fuel scarcity impact on vendor arrivals, power redundancy costs, or guest count vs. plate quality).
-        3. [THE STRATEGIC VERDICT]: An authoritative, blunt evaluation of whether this budget can sustain the client's vision or if it requires a total re-calibration.
+        Required Report Format:
+        1. [THE MARKET REALITY]: Honestly evaluate if this budget matches the user's "Execution Score" and market tier.
+        2. [LOGISTICAL RISKS]: Point out 2-3 specific risks based on the numbers provided (e.g., if catering is too low for the total, or photography is over-prioritized).
+        3. [THE INFLATION ADJUSTMENT]: Advise on how current Nigerian market costs (FX/Fuel) might change these numbers by the wedding date.
+        4. [STRATEGIC VERDICT]: A final, authoritative recommendation.
         
-        Tone: Masterful, blunt, and highly analytical. Under 200 words.`;
+        Tone: Masterful, blunt yet supportive. Focus on the "Emmy White" standard of excellence. Under 200 words.`;
     }
 
     const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -42,8 +42,8 @@ export default async function handler(request, response) {
             { role: "system", content: systemInstruction },
             { role: "user", content: prompt }
         ],
-        temperature: 0.3, // Low temperature for high logical consistency
-        max_tokens: 500
+        temperature: 0.5, // THE SWEET SPOT: Smart logic + Human warmth
+        max_tokens: 800
       })
     });
 
@@ -58,6 +58,6 @@ export default async function handler(request, response) {
     });
 
   } catch (error) {
-    return response.status(500).json({ error: 'Strategic server update in progress.' });
+    return response.status(500).json({ error: 'Recalibrating strategy. Please refresh.' });
   }
 }
