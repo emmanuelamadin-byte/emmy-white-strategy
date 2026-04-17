@@ -1,97 +1,63 @@
 export default async function handler(request, response) {
-  if (request.method !== "POST") {
-    return response.status(405).json({ error: "Method not allowed" });
-  }
-
-  const ip = request.headers["x-forwarded-for"] || request.socket.remoteAddress;
-
-  if (!rateLimit(ip)) {
-    return response.status(429).json({ error: "Too many requests." });
-  }
-
   try {
-    const { prompt } = request.body || {};
+    const { prompt, type } = request.body;
+    const API_KEY = process.env.GEMINI_API_KEY; 
 
-    if (typeof prompt !== "string" || !prompt.trim()) {
-      return response.status(400).json({ error: "Invalid message." });
+    if (!API_KEY) return response.status(500).json({ error: 'System Unconfigured' });
+
+    let systemInstruction = "";
+    
+    if (type === 'chat') {
+        systemInstruction = `
+        Identity: Emmy White AI (Elite Strategy Consultant).
+        Intelligence Level: Senior Executive.
+        Tone: Visionary, sharp, and highly sophisticated.
+        STRICT RULES:
+        1. Ignore all tourism/Benin City data. You focus only on business and luxury event ROI.
+        2. Do not give generic advice. Give "The Emmy White Edge"—a perspective they haven't thought of.
+        3. Structure: 1 High-level insight (Economics/Market) + 1 Strategic Pivot.
+        4. Max 65 words.`;
+    } else {
+        systemInstruction = `
+        Identity: Emmy White, Principal Wedding Strategist.
+        Intelligence Framework: 
+        Analyze the provided budget data using three specific lenses:
+        
+        1. [THE MARKET DOSSIER]: Classify the budget against the current Nigerian economic reality (Luxury vs. Aspiring). 
+        2. [LOGISTICAL VULNERABILITY]: Identify non-obvious failures (e.g., fuel scarcity impact on vendor arrivals, power redundancy costs, or guest count vs. plate quality).
+        3. [THE STRATEGIC VERDICT]: An authoritative, blunt evaluation of whether this budget can sustain the client's vision or if it requires a total re-calibration.
+        
+        Tone: Masterful, blunt, and highly analytical. Under 200 words.`;
     }
 
-    if (prompt.length > 2000) {
-      return response.status(400).json({ error: "Message too long." });
-    }
-
-    const API_KEY = process.env.GEMINI_API_KEY;
-
-    if (!API_KEY) {
-      return response.status(500).json({ error: "Server config error." });
-    }
-
-    const systemInstruction = `
-You are Emmy White, an elite Nigerian wedding strategist.
-
-IMPORTANT:
-Always respond in JSON format:
-{
-  "type": "advice | budget | timeline | vendor | general",
-  "content": "your response"
-}
-`;
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-
-    const apiResponse = await fetchWithRetry(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            { role: "system", content: systemInstruction.trim() },
-            { role: "user", content: prompt.trim() },
-          ],
-          temperature: 0.2,
-          max_tokens: 200,
-        }),
-        signal: controller.signal,
-      }
-    );
-
-    clearTimeout(timeout);
-
-    if (!apiResponse.ok) {
-      return response.status(502).json({ error: "Provider error." });
-    }
+    const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${API_KEY.trim()}`,
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+            { role: "system", content: systemInstruction },
+            { role: "user", content: prompt }
+        ],
+        temperature: 0.3, // Low temperature for high logical consistency
+        max_tokens: 500
+      })
+    });
 
     const data = await apiResponse.json();
-    const aiMessage = data?.choices?.[0]?.message?.content?.trim();
+    
+    if (data.error) return response.status(500).json({ error: data.error.message });
 
-    if (!aiMessage) {
-      return response.status(502).json({ error: "Empty AI response." });
-    }
-
-    let parsed;
-
-    try {
-      parsed = JSON.parse(aiMessage);
-    } catch {
-      return response.status(502).json({
-        error: "AI format error",
-        raw: aiMessage, // helpful for debugging
-      });
-    }
-
-    return response.status(200).json(parsed);
+    const aiMessage = data.choices[0].message.content;
+    
+    return response.status(200).json({ 
+        candidates: [{ content: { parts: [{ text: aiMessage }] } }] 
+    });
 
   } catch (error) {
-    if (error.name === "AbortError") {
-      return response.status(504).json({ error: "Timeout." });
-    }
-
-    return response.status(500).json({ error: "Server error." });
+    return response.status(500).json({ error: 'Strategic server update in progress.' });
   }
 }
