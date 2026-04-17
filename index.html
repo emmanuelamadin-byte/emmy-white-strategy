@@ -6,10 +6,9 @@
     <title>Emmy White • Exclusive Wedding Consultant</title>
     <script src="https://cdn.tailwindcss.com/3.4.14"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
+  
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap');
         .heading-font { font-family: 'Playfair Display', serif; }
@@ -36,12 +35,19 @@
         </nav>
     </header>
 
+    <!-- Nice Welcome Message -->
+    <div class="max-w-2xl mx-auto px-6 py-10 text-center">
+        <p class="text-lg text-neutral-600 leading-relaxed italic">
+            Welcome. Let's craft your unforgettable luxury wedding with precision, elegance, and strategic excellence.
+        </p>
+    </div>
+
     <main class="max-w-6xl mx-auto px-6 pb-24">
         <div class="luxury-card p-12 mb-12 text-center" data-aos="zoom-in">
             <h2 class="heading-font text-3xl mb-4 text-amber-900 italic">Total Investment Budget</h2>
             <div class="flex items-center justify-center">
                 <span class="text-6xl text-amber-400 font-light mr-4">₦</span>
-                <input id="active-budget" type="text" onkeyup="formatCurrency(this)" value="5,000,000" class="text-6xl font-light bg-transparent border-b-2 border-amber-100 outline-none w-full max-w-xl text-center focus:border-amber-400">
+                <input id="active-budget" type="text" onkeyup="formatCurrency(this); resetAnalyzeButton();" value="5,000,000" class="text-6xl font-light bg-transparent border-b-2 border-amber-100 outline-none w-full max-w-xl text-center focus:border-amber-400">
             </div>
         </div>
 
@@ -54,7 +60,10 @@
                 <div class="luxury-card p-10 space-y-6" id="input-container" data-aos="fade-right"></div>
                 <div class="luxury-card p-10 space-y-8" data-aos="fade-left">
                     <div id="priority-container" class="space-y-8"></div>
-                    <button type="button" onclick="generateReport('manual')" class="w-full py-8 rounded-3xl btn-gold heading-font text-3xl mt-8">Analyze Strategy →</button>
+                    <button id="analyze-btn" type="button" onclick="generateReport('manual')" 
+                            class="w-full py-8 rounded-3xl btn-gold heading-font text-3xl mt-8">
+                        Analyze Strategy →
+                    </button>
                 </div>
             </div>
         </div>
@@ -63,7 +72,10 @@
             <div class="max-w-3xl mx-auto luxury-card p-12 space-y-10 text-center" data-aos="fade-up">
                 <h3 class="heading-font text-4xl mb-4 italic text-amber-900">Professional Auto-Allocation</h3>
                 <div id="allocator-priority-container" class="space-y-8 text-left"></div>
-                <button type="button" onclick="generateReport('auto')" class="w-full py-8 rounded-3xl btn-gold heading-font text-3xl mt-8">Generate Perfect Split →</button>
+                <button id="analyze-btn-auto" type="button" onclick="generateReport('auto')" 
+                        class="w-full py-8 rounded-3xl btn-gold heading-font text-3xl mt-8">
+                    Generate Perfect Split →
+                </button>
             </div>
         </div>
 
@@ -139,7 +151,6 @@
     <script>
         // INITIALIZE ANIMATIONS
         AOS.init({ duration: 1000, once: true });
-
         const ACCESS_KEY = "EMMY2026";
         let manualItems = [
             { id: 'm1', name: 'Photography', prio: 5, price: 600000 },
@@ -160,19 +171,22 @@
 
         function toggleChat() { document.getElementById('chat-window').classList.toggle('hidden'); }
 
+        // ==================== NEW: Button Reset Logic ====================
+        function resetAnalyzeButton() {
+            const btn = document.getElementById('analyze-btn');
+            if (btn) btn.innerHTML = 'Analyze Strategy →';
+        }
+
         async function sendChatMessage() {
             const input = document.getElementById('chat-input');
             const msgCont = document.getElementById('chat-messages');
             if(!input.value.trim()) return;
-
             const userText = input.value;
             msgCont.innerHTML += `<div class="bg-neutral-100 p-2 rounded-xl ml-8 text-right">${userText}</div>`;
             input.value = '';
-
             const loadingId = "loading-" + Date.now();
             msgCont.innerHTML += `<div id="${loadingId}" class="bg-amber-50 p-2 rounded-xl mr-8 text-amber-800 italic animate-pulse">Emmy AI is thinking...</div>`;
             msgCont.scrollTop = msgCont.scrollHeight;
-
             try {
                 const response = await fetch('/api/analyze', {
                     method: 'POST', body: JSON.stringify({ prompt: userText, type: 'chat' }),
@@ -181,20 +195,27 @@
                 const data = await response.json();
                 document.getElementById(loadingId).remove();
                 msgCont.innerHTML += `<div class="bg-amber-50 p-2 rounded-xl mr-8">${data.candidates[0].content.parts[0].text}</div>`;
-            } catch (e) { 
+            } catch (e) {
                 document.getElementById(loadingId).remove();
-                msgCont.innerHTML += `<div class="bg-red-50 p-2 rounded-xl mr-8">System Error. Please refresh.</div>`; 
+                msgCont.innerHTML += `<div class="bg-red-50 p-2 rounded-xl mr-8">System Error. Please refresh.</div>`;
             }
             msgCont.scrollTop = msgCont.scrollHeight;
         }
 
         async function generateReport(mode) {
+            const analyzeBtn = mode === 'manual' 
+                ? document.getElementById('analyze-btn') 
+                : document.getElementById('analyze-btn-auto');
+
+            if (analyzeBtn) {
+                analyzeBtn.innerHTML = 'Your Analysis is Ready ✓';
+            }
+
             const adviceDiv = document.getElementById('ai-advice');
             const totalBudget = parseInt(document.getElementById('active-budget').value.replace(/[^0-9]/g, '')) || 1;
             adviceDiv.innerHTML = `<div class="p-8 bg-amber-50 rounded-3xl animate-pulse italic text-center">Emmy's AI is analyzing your strategy...</div>`;
             document.getElementById('report-section').classList.remove('hidden-section');
             window.scrollTo({ top: document.getElementById('report-section').offsetTop - 50, behavior: 'smooth' });
-
             let finalData = [];
             let totalPrioPoints = 0;
             if (mode === 'manual') { finalData = manualItems; } else {
@@ -204,25 +225,21 @@
                     finalData.push({ ...c, prio: p });
                 });
             }
-
             let reportItems = [];
             let totalPlanned = 0;
             const listCont = document.getElementById('breakdown-list');
             listCont.innerHTML = '';
-
             finalData.forEach(item => {
                 let price = mode === 'manual' ? item.price : Math.round(totalBudget * (item.prio / totalPrioPoints));
                 totalPlanned += price;
                 reportItems.push(`${item.name}: ₦${price.toLocaleString()}`);
                 listCont.innerHTML += `<div class="flex justify-between border-b border-amber-50 pb-2"><span>${item.name}</span><span>₦${price.toLocaleString()}</span></div>`;
             });
-
             const diff = totalPlanned - totalBudget;
             document.getElementById('score-val').innerText = Math.round(Math.max(10, 100 - (Math.abs(diff)/totalBudget * 50)));
             document.getElementById('final-total').innerText = `₦${totalPlanned.toLocaleString()}`;
             document.getElementById('over-under-label').innerText = diff > 0 ? `Deficit: ₦${diff.toLocaleString()}` : `Surplus: ₦${Math.abs(diff).toLocaleString()}`;
             document.getElementById('wedding-style').innerText = totalBudget > 8000000 ? 'Imperial Luxury' : 'Standard Elite';
-
             try {
                 const response = await fetch('/api/analyze', {
                     method: 'POST', body: JSON.stringify({ prompt: `Analyze budget: ₦${totalBudget}. Items: ${reportItems.join(', ')}`, type: 'report' }),
@@ -233,21 +250,43 @@
             } catch (e) { adviceDiv.innerHTML = "Analysis currently unavailable. Please check back later."; }
         }
 
+        // ==================== IMPROVED PROFESSIONAL PDF ====================
         function downloadReportPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const advice = document.getElementById('ai-advice').innerText.replace(/<br>/g, '\n');
             const total = document.getElementById('final-total').innerText;
             const score = document.getElementById('score-val').innerText;
-            doc.setFontSize(22);
-            doc.text("Emmy White Strategy Report", 20, 20);
+
+            // Top Header
+            doc.setFontSize(26);
+            doc.text("Emmy White", 105, 25, { align: "center" });
+            doc.setFontSize(11);
+            doc.text("Professional Wedding Strategist", 105, 33, { align: "center" });
+
+            doc.setDrawColor(212, 175, 119);
+            doc.line(20, 40, 190, 40);
+
+            // Content
+            doc.setFontSize(18);
+            doc.text("Strategy Report", 20, 55);
             doc.setFontSize(12);
-            doc.text(`Execution Score: ${score}/100`, 20, 35);
-            doc.text(`Estimated Total: ${total}`, 20, 45);
-            doc.text("Strategy Advice:", 20, 60);
-            const splitAdvice = doc.splitTextToSize(advice, 170);
-            doc.text(splitAdvice, 20, 70);
-            doc.save("Emmy-White-Strategy.pdf");
+            doc.text(`Execution Score: ${score}/100`, 20, 68);
+            doc.text(`Estimated Total: ${total}`, 20, 76);
+
+            doc.setFontSize(13);
+            doc.text("Strategic Advice & Recommendations", 20, 92);
+
+            const splitAdvice = doc.splitTextToSize(advice, 165);
+            doc.text(splitAdvice, 20, 102);
+
+            // Footer
+            doc.setFontSize(10);
+            doc.text("Prepared by Emmy White", 20, 280);
+            doc.text("emmanuelamadin@gmail.com", 105, 285, { align: "center" });
+            doc.text("Luxury Wedding Strategy • Confidential", 190, 280, { align: "right" });
+
+            doc.save("Emmy-White-Strategy-Report.pdf");
         }
 
         function renderPlanner() {
@@ -260,17 +299,49 @@
                 prioCont.innerHTML += prioritySelector(`manual-${item.id}`, item.name, item.prio, `updatePrio('${item.id}', this.value)`);
             });
         }
+
         function renderAllocator() { const cont = document.getElementById('allocator-priority-container'); cont.innerHTML = ''; rigidCore.forEach(cat => { cont.innerHTML += prioritySelector(`auto-${cat.id}`, cat.name, 3); }); }
-        function prioritySelector(id, label, currentPrio, onChange = '') { return `<div class="space-y-2"><label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">${label}</label><select id="prio-${id}" onchange="${onChange}" class="w-full bg-neutral-50 border border-amber-50 rounded-2xl px-6 py-4 text-sm font-semibold text-amber-900 outline-none focus:border-amber-400"><option value="5" ${currentPrio == 5 ? 'selected' : ''}>5 - Absolute Priority</option><option value="4" ${currentPrio == 4 ? 'selected' : ''}>4 - Very Important</option><option value="3" ${currentPrio == 3 ? 'selected' : ''}>3 - Standard</option><option value="2" ${currentPrio == 2 ? 'selected' : ''}>2 - Low Importance</option><option value="1" ${currentPrio == 1 ? 'selected' : ''}>1 - Just Basic</option></select></div>`; }
+
+        function prioritySelector(id, label, currentPrio, onChange = '') { 
+            return `<div class="space-y-2"><label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">${label}</label><select id="prio-${id}" onchange="${onChange}" class="w-full bg-neutral-50 border border-amber-50 rounded-2xl px-6 py-4 text-sm font-semibold text-amber-900 outline-none focus:border-amber-400"><option value="5" ${currentPrio == 5 ? 'selected' : ''}>5 - Absolute Priority</option><option value="4" ${currentPrio == 4 ? 'selected' : ''}>4 - Very Important</option><option value="3" ${currentPrio == 3 ? 'selected' : ''}>3 - Standard</option><option value="2" ${currentPrio == 2 ? 'selected' : ''}>2 - Low Importance</option><option value="1" ${currentPrio == 1 ? 'selected' : ''}>1 - Just Basic</option></select></div>`; 
+        }
+
         function addNewCategory() { if (manualItems.length < 11) { manualItems.push({ id: 'm' + Date.now(), name: 'New Item', prio: 3, price: 0 }); renderPlanner(); } }
         function removeItem(id) { manualItems = manualItems.filter(i => i.id !== id); renderPlanner(); }
         function updateName(id, val) { manualItems.find(i => i.id === id).name = val; renderPlanner(); }
-        function updatePrice(id, val) { manualItems.find(i => i.id === id).price = parseInt(val.replace(/[^0-9]/g, '')) || 0; }
-        function updatePrio(id, val) { manualItems.find(i => i.id === id).prio = parseInt(val); }
-        function formatCurrency(input) { let val = input.value.replace(/[^0-9]/g, ''); input.value = (parseInt(val) || 0).toLocaleString(); }
+        function updatePrice(id, val) { 
+            manualItems.find(i => i.id === id).price = parseInt(val.replace(/[^0-9]/g, '')) || 0; 
+            resetAnalyzeButton(); 
+        }
+        function updatePrio(id, val) { 
+            manualItems.find(i => i.id === id).prio = parseInt(val); 
+            resetAnalyzeButton(); 
+        }
+        function formatCurrency(input) { 
+            let val = input.value.replace(/[^0-9]/g, ''); 
+            input.value = (parseInt(val) || 0).toLocaleString(); 
+            resetAnalyzeButton();
+        }
+
         function unlockGuide() { if (document.getElementById('passkey-input').value === ACCESS_KEY) { document.getElementById('lock-screen').classList.add('hidden'); document.getElementById('guide-content').classList.remove('blur-2xl', 'opacity-10', 'pointer-events-none'); } else { document.getElementById('lock-error').classList.remove('hidden'); } }
-        function renderGuide() { const data = { 'Photography': [200,600,1500], 'Hall Rental': [150,700,4000], 'Catering': [600,1500,5000], 'Decor': [300,800,3000] }; const grid = document.getElementById('market-guide-grid'); Object.keys(data).forEach(k => { grid.innerHTML += `<div class="luxury-card p-8"><h4>${k}</h4><p class="text-xs mt-4 italic">Economy to Luxury tiers available.</p></div>`; }); }
-        function switchView(view) { document.getElementById('planner-view').classList.toggle('hidden-section', view !== 'planner'); document.getElementById('allocator-view').classList.toggle('hidden-section', view !== 'allocator'); document.getElementById('guide-view').classList.toggle('hidden-section', view !== 'guide'); document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active')); document.getElementById(`nav-${view}`).classList.add('active'); document.getElementById('report-section').classList.add('hidden-section'); AOS.refresh(); }
+
+        function renderGuide() { 
+            const data = { 'Photography': [200,600,1500], 'Hall Rental': [150,700,4000], 'Catering': [600,1500,5000], 'Decor': [300,800,3000] }; 
+            const grid = document.getElementById('market-guide-grid'); 
+            Object.keys(data).forEach(k => { 
+                grid.innerHTML += `<div class="luxury-card p-8"><h4>${k}</h4><p class="text-xs mt-4 italic">Economy to Luxury tiers available.</p></div>`; 
+            }); 
+        }
+
+        function switchView(view) { 
+            document.getElementById('planner-view').classList.toggle('hidden-section', view !== 'planner'); 
+            document.getElementById('allocator-view').classList.toggle('hidden-section', view !== 'allocator'); 
+            document.getElementById('guide-view').classList.toggle('hidden-section', view !== 'guide'); 
+            document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active')); 
+            document.getElementById(`nav-${view}`).classList.add('active'); 
+            document.getElementById('report-section').classList.add('hidden-section'); 
+            AOS.refresh(); 
+        }
     </script>
 </body>
 </html>
